@@ -16,7 +16,7 @@ setup(
     install_requires=[
         'reportlab==4.1.0',
         'striprtf==0.0.26',
-        'Pillow==10.2.0',
+        'Pillow==10.3.0',
     ],
     entry_points={
         'console_scripts': [
