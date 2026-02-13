@@ -5,6 +5,7 @@ Simple test script to verify RTF to PDF conversion works
 
 import sys
 import os
+import tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from rtf_to_pdf_converter import RTFToPDFConverter
@@ -13,8 +14,10 @@ def test_conversion():
     """Test the RTF to PDF conversion."""
     converter = RTFToPDFConverter()
     
-    input_file = "/tmp/sample_test.rtf"
-    output_file = "/tmp/sample_test_output.pdf"
+    # Use platform-independent temp directory
+    temp_dir = tempfile.gettempdir()
+    input_file = os.path.join(temp_dir, "sample_test.rtf")
+    output_file = os.path.join(temp_dir, "sample_test_output.pdf")
     
     print(f"Testing conversion of {input_file} to {output_file}")
     

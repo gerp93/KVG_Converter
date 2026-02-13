@@ -14,7 +14,6 @@ setup(
     author='KVG Converter',
     py_modules=['rtf_to_pdf_converter'],
     install_requires=[
-        'pypandoc==1.13',
         'reportlab==4.1.0',
         'striprtf==0.0.26',
         'Pillow==10.2.0',
