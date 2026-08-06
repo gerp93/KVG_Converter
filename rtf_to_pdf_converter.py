@@ -16,6 +16,9 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT, TA_JUSTIFY
 import re
 
+import theming
+from updater import CURRENT_VERSION, check_for_update, download_update, apply_update_and_restart
+
 
 class RTFToPDFConverter:
     """Handles conversion of RTF files to PDF format."""
@@ -142,8 +145,11 @@ class ConverterGUI:
         self.converter = RTFToPDFConverter()
         self.rtf_file_path = None
         self.pdf_file_path = None
-        
+
         self._create_widgets()
+        self._create_menu()
+        theming.capture_defaults(self.root)
+        self.root.after(1500, lambda: self._check_for_updates(manual=False))
     
     def _create_widgets(self):
         """Create and layout GUI widgets."""
@@ -244,7 +250,71 @@ class ConverterGUI:
             wraplength=500
         )
         self.status_label.pack(pady=5)
-    
+
+    def _create_menu(self):
+        """Create the menu bar: theme picker and Help (updates/version)."""
+        menubar = tk.Menu(self.root)
+
+        self.theme_var = tk.StringVar(value="__default__")
+        theme_menu = tk.Menu(menubar, tearoff=0)
+        theme_menu.add_radiobutton(
+            label=theming.DEFAULT_LABEL, variable=self.theme_var,
+            value="__default__", command=lambda: self._on_theme_selected(None),
+        )
+        theme_menu.add_separator()
+        for theme_id, name in theming.THEME_NAMES.items():
+            theme_menu.add_radiobutton(
+                label=name, variable=self.theme_var,
+                value=theme_id, command=lambda tid=theme_id: self._on_theme_selected(tid),
+            )
+        menubar.add_cascade(label="Theme", menu=theme_menu)
+
+        help_menu = tk.Menu(menubar, tearoff=0)
+        help_menu.add_command(label="Check for Updates...", command=lambda: self._check_for_updates(manual=True))
+        help_menu.add_separator()
+        help_menu.add_command(label=f"Version {CURRENT_VERSION}", state=tk.DISABLED)
+        menubar.add_cascade(label="Help", menu=help_menu)
+
+        self.root.config(menu=menubar)
+
+    def _on_theme_selected(self, theme_id):
+        theming.apply_theme(self.root, theme_id)
+
+    def _check_for_updates(self, manual: bool):
+        threading.Thread(target=self._check_for_updates_worker, args=(manual,), daemon=True).start()
+
+    def _check_for_updates_worker(self, manual: bool):
+        update = check_for_update()
+
+        def show():
+            if update:
+                self._prompt_update(update)
+            elif manual:
+                messagebox.showinfo("Up to Date", f"You're running the latest version ({CURRENT_VERSION}).")
+
+        self.root.after(0, show)
+
+    def _prompt_update(self, update):
+        if not messagebox.askyesno(
+            "Update Available",
+            f"Version {update['version']} is available (you have {CURRENT_VERSION}).\n\n"
+            "Download and install it now? RTF to PDF Converter will restart automatically.",
+        ):
+            return
+        threading.Thread(target=self._download_and_apply_update, args=(update,), daemon=True).start()
+
+    def _download_and_apply_update(self, update):
+        try:
+            new_binary = download_update(update["download_url"])
+        except Exception as e:
+            self.root.after(0, lambda: messagebox.showerror("Update Failed", f"Could not download update: {e}"))
+            return
+        self.root.after(0, lambda: self._finish_update(new_binary))
+
+    def _finish_update(self, new_binary):
+        messagebox.showinfo("Restarting", "RTF to PDF Converter will now restart to complete the update.")
+        apply_update_and_restart(new_binary)
+
     def browse_input_file(self):
         """Open file dialog to select input RTF file."""
         file_path = filedialog.askopenfilename(

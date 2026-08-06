@@ -59,5 +59,6 @@ jobs:
       app_name: RTF_to_PDF_Converter
       entry_point: rtf_to_pdf_converter.py
       windowed: true
+      version_file: _version.py
     permissions:
       contents: write
