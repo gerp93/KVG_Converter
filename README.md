@@ -3,6 +3,12 @@ RTF to PDF Converter - Windows Desktop Application
 
 A simple and user-friendly Windows desktop application that converts RTF (Rich Text Format) files to PDF format while preserving formatting.
 
+This repo follows the shared conventions in
+[gerp93/KVG_Standards](https://github.com/gerp93/KVG_Standards) for
+theming, licensing, release/CI, and self-update — see that repo for the
+canonical rules (e.g. `themes-versioning.md`, `update-check-versioning.md`)
+before changing anything in those areas here.
+
 ## Features
 
 - ✅ Easy-to-use graphical user interface
